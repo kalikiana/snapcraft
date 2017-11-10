@@ -241,11 +241,6 @@ class ContainerbuildTestCase(LXDTestCase):
         fake_snapd = tests.fixture_setup.FakeSnapd()
         self.useFixture(fake_snapd)
         fake_snapd.snaps_result = [
-            {'name': 'core',
-             'confinement': 'strict',
-             'id': '2kkitQurgOkL3foImG4wDwn9CIANuHlt',
-             'channel': 'stable',
-             'revision': '123'},
             {'name': 'snapcraft',
              'confinement': 'classic',
              'id': '3lljuRvshPlM4gpJnH5xExo0DJBOvImu',
@@ -311,7 +306,7 @@ class ContainerbuildTestCase(LXDTestCase):
         self.useFixture(fake_snapd)
 
         builder = self.make_containerbuild()
-        self.assertIn('Error querying \'core\' snap: not found',
+        self.assertIn('Error querying \'snapcraft\' snap: not found',
                       str(self.assertRaises(SnapdError,
                                             builder.execute)))
         # Temporary folder should remain in case of failure
@@ -328,11 +323,6 @@ class ContainerbuildTestCase(LXDTestCase):
         fake_snapd = tests.fixture_setup.FakeSnapd()
         self.useFixture(fake_snapd)
         fake_snapd.snaps_result = [
-            {'name': 'core',
-             'confinement': 'strict',
-             'id': '2kkitQurgOkL3foImG4wDwn9CIANuHlt',
-             'channel': 'stable',
-             'revision': '123'},
             {'name': 'snapcraft',
              'confinement': 'classic',
              'id': '3lljuRvshPlM4gpJnH5xExo0DJBOvImu',
@@ -345,8 +335,6 @@ class ContainerbuildTestCase(LXDTestCase):
         builder.execute()
         if hasattr(self, 'cross') and self.cross:
             mock_container_run.assert_has_calls([
-                call(['snap', 'install', 'core', '--channel', 'stable']),
-                call(['snap', 'refresh', 'core', '--channel', 'stable']),
                 call(['snap', 'install', 'snapcraft', '--channel', 'edge',
                       '--classic']),
                 call(['snap', 'refresh', 'snapcraft', '--channel', 'edge',
@@ -356,12 +344,6 @@ class ContainerbuildTestCase(LXDTestCase):
 
         self.fake_lxd.check_call_mock.assert_has_calls([
             call(['lxc', 'file', 'push',
-                  os.path.join(builder.tmp_dir, 'core_123.assert'),
-                  '{}/run/core_123.assert'.format(self.fake_lxd.name)]),
-            call(['lxc', 'file', 'push',
-                  os.path.join(builder.tmp_dir, 'core_123.snap'),
-                  '{}/run/core_123.snap'.format(self.fake_lxd.name)]),
-            call(['lxc', 'file', 'push',
                   os.path.join(builder.tmp_dir, 'snapcraft_345.assert'),
                   '{}/run/snapcraft_345.assert'.format(self.fake_lxd.name)]),
             call(['lxc', 'file', 'push',
@@ -370,8 +352,6 @@ class ContainerbuildTestCase(LXDTestCase):
         ])
         mock_container_run.assert_has_calls([
             call(['apt-get', 'install', 'squashfuse', '-y']),
-            call(['snap', 'ack', '/run/core_123.assert']),
-            call(['snap', 'install', '/run/core_123.snap']),
             call(['snap', 'ack', '/run/snapcraft_345.assert']),
             call(['snap', 'install', '/run/snapcraft_345.snap', '--classic']),
         ])
@@ -390,11 +370,6 @@ class ContainerbuildTestCase(LXDTestCase):
         fake_snapd = tests.fixture_setup.FakeSnapd()
         self.useFixture(fake_snapd)
         fake_snapd.snaps_result = [
-            {'name': 'core',
-             'confinement': 'strict',
-             'id': '2kkitQurgOkL3foImG4wDwn9CIANuHlt',
-             'channel': 'stable',
-             'revision': '123'},
             {'name': 'snapcraft',
              'confinement': 'classic',
              'id': '',
@@ -407,8 +382,6 @@ class ContainerbuildTestCase(LXDTestCase):
         builder.execute()
         if hasattr(self, 'cross') and self.cross:
             mock_container_run.assert_has_calls([
-                call(['snap', 'install', 'core', '--channel', 'stable']),
-                call(['snap', 'refresh', 'core', '--channel', 'stable']),
                 call(['snap', 'install', 'snapcraft', '--channel', 'edge',
                       '--classic']),
                 call(['snap', 'refresh', 'snapcraft', '--channel', 'edge',
@@ -444,7 +417,7 @@ class ContainerbuildTestCase(LXDTestCase):
                     if args[0][-1].endswith('/current'):
                         return '123\n'.encode('utf-8')
                 if 'sha384sum' in args[0]:
-                    if args[0][-1].endswith('core_123.snap'):
+                    if args[0][-1].endswith('snapcraft_123.snap'):
                         return 'deadbeef {}'.format(args[0][1]).encode('utf-8')
                     return 'abcdef {}'.format(args[0][1]).encode('utf-8')
             return default_side_effect(*args, **kwargs)
@@ -455,11 +428,6 @@ class ContainerbuildTestCase(LXDTestCase):
         fake_snapd = tests.fixture_setup.FakeSnapd()
         self.useFixture(fake_snapd)
         fake_snapd.snaps_result = [
-            {'name': 'core',
-             'confinement': 'strict',
-             'id': '2kkitQurgOkL3foImG4wDwn9CIANuHlt',
-             'channel': 'stable',
-             'revision': '123'},
             {'name': 'snapcraft',
              'confinement': 'classic',
              'id': '',
@@ -470,10 +438,11 @@ class ContainerbuildTestCase(LXDTestCase):
         builder = self.make_containerbuild()
 
         builder.execute()
+        mock_container_run.assert_has_calls([
+            call(['apt-get', 'install', 'squashfuse', '-y']),
+        ])
         if hasattr(self, 'cross') and self.cross:
             mock_container_run.assert_has_calls([
-                call(['snap', 'install', 'core', '--channel', 'stable']),
-                call(['snap', 'refresh', 'core', '--channel', 'stable']),
                 call(['snap', 'install', 'snapcraft', '--channel', 'edge',
                       '--classic']),
                 call(['snap', 'refresh', 'snapcraft', '--channel', 'edge',
@@ -481,19 +450,8 @@ class ContainerbuildTestCase(LXDTestCase):
             ])
             return
 
-        self.fake_lxd.check_call_mock.assert_has_calls([
-            call(['lxc', 'file', 'push',
-                  os.path.join(builder.tmp_dir, 'snapcraft_123.assert'),
-                  '{}/run/snapcraft_123.assert'.format(self.fake_lxd.name)]),
-            call(['lxc', 'file', 'push',
-                  os.path.join(builder.tmp_dir, 'snapcraft_123.snap'),
-                  '{}/run/snapcraft_123.snap'.format(self.fake_lxd.name)]),
-        ])
-        mock_container_run.assert_has_calls([
-            call(['apt-get', 'install', 'squashfuse', '-y']),
-            call(['snap', 'ack', '/run/snapcraft_123.assert']),
-            call(['snap', 'install', '/run/snapcraft_123.snap', '--classic']),
-        ])
+        self.assertIn("Not re-injecting same version of 'snapcraft'",
+                      self.fake_logger.output)
 
 
 class ProjectTestCase(ContainerbuildTestCase):

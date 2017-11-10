@@ -198,8 +198,6 @@ class Containerbuild:
             # Because of https://bugs.launchpad.net/snappy/+bug/1628289
             self._container_run(['apt-get', 'install', 'squashfuse', '-y'])
 
-            # Push core snap into container
-            self._inject_snap('core')
             self._inject_snap('snapcraft')
         else:
             self._container_run(['apt-get', 'install', 'snapcraft', '-y'])
@@ -250,7 +248,7 @@ class Containerbuild:
             shutil.copyfile(installed, filepath)
 
         if self._is_same_snap(filepath, name):
-            logger.debug('Not re-injecting same version of {!r}'.format(name))
+            logger.info('Not re-injecting same version of {!r}'.format(name))
             return
 
         if not rev.startswith('x'):
