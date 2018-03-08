@@ -221,6 +221,7 @@ class CatkinPlugin(snapcraft.BasePlugin):
     def _pip(self):
         if not self.__pip:
             self.__pip = _python.Pip(
+                project=self.project,
                 python_major_version='2',  # ROS1 only supports python2
                 part_dir=self.partdir,
                 install_dir=self.installdir,

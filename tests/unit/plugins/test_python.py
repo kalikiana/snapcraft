@@ -53,6 +53,108 @@ def setup_directories(plugin, python_version):
                 '# comment\n')
 
 
+class PythonPluginVendoringTestCase(unit.TestCase):
+
+    def setUp(self):
+        super().setUp()
+
+        class Options:
+            source = '.'
+            source_subdir = ''
+            requirements = ''
+            constraints = ''
+            python_version = 'python3'
+            python_packages = []
+            process_dependency_links = False
+
+        self.options = Options()
+        self.project_options = snapcraft.ProjectOptions()
+
+        patcher = mock.patch('snapcraft.plugins._python.Pip.setup')
+        self.mock_pip_setup = patcher.start()
+        self.addCleanup(patcher.stop)
+
+        patcher = mock.patch('snapcraft.plugins._python.Pip.download')
+        self.mock_pip_download = patcher.start()
+        self.addCleanup(patcher.stop)
+
+        patcher = mock.patch('snapcraft.plugins._python.Pip.install')
+        self.mock_pip_install = patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_packages_allowed(self):
+        self.project_options.info = snapcraft.ProjectInfo({
+            'name': 'foo', 'version': '1',
+            'summary': 'bar', 'description': 'baz',
+            'vendoring': ['example.com'],
+            'confinement': 'strict'
+            })
+        self.options.python_packages = ['http://example.com/foo.tar.gz']
+        plugin = python.PythonPlugin('test-part', self.options,
+                                     self.project_options)
+        setup_directories(plugin, self.options.python_version)
+        os.makedirs(os.path.join(plugin.installdir, 'usr', 'bin'))
+        open(os.path.join(plugin.installdir, 'usr', 'bin',
+                          self.options.python_version), 'w').close()
+        plugin.pull()
+
+    def test_packages_unvendored(self):
+        self.project_options.info = snapcraft.ProjectInfo({
+            'name': 'foo', 'version': '1',
+            'summary': 'bar', 'description': 'baz',
+            'vendoring': ['test.net'],
+            'confinement': 'strict'
+            })
+        self.options.python_packages = ['http://example.com/foo.tar.gz']
+        plugin = python.PythonPlugin('test-part', self.options,
+                                     self.project_options)
+        setup_directories(plugin, self.options.python_version)
+        os.makedirs(os.path.join(plugin.installdir, 'usr', 'bin'))
+        open(os.path.join(plugin.installdir, 'usr', 'bin',
+                          self.options.python_version), 'w').close()
+        self.assertRaises(snapcraft.internal.errors.UnvendoredHostError,
+                          plugin.pull)
+
+    def test_requirements_unvendored(self):
+        self.project_options.info = snapcraft.ProjectInfo({
+            'name': 'foo', 'version': '1',
+            'summary': 'bar', 'description': 'baz',
+            'vendoring': ['test.net'],
+            'confinement': 'strict'
+            })
+        self.options.requirements = 'requirements.txt'
+        plugin = python.PythonPlugin('test-part', self.options,
+                                     self.project_options)
+        setup_directories(plugin, self.options.python_version)
+        os.makedirs(os.path.join(plugin.installdir, 'usr', 'bin'))
+        open(os.path.join(plugin.installdir, 'usr', 'bin',
+                          self.options.python_version), 'w').close()
+        requirements_path = os.path.join(plugin.sourcedir, 'requirements.txt')
+        with open(requirements_path, 'w') as requirements_file:
+            requirements_file.write('http://example.com/foo.tar.gz')
+        self.assertRaises(snapcraft.internal.errors.UnvendoredHostError,
+                          plugin.pull)
+
+    def test_requirements_url_unvendored(self):
+        self.project_options.info = snapcraft.ProjectInfo({
+            'name': 'foo', 'version': '1',
+            'summary': 'bar', 'description': 'baz',
+            'vendoring': ['test.net'],
+            'confinement': 'strict'
+            })
+        self.options.requirements = 'https://example.com/requirements.txt'
+        plugin = python.PythonPlugin('test-part', self.options,
+                                     self.project_options)
+        self.assertThat(self.project_options.info.vendoring,
+                        Equals(['test.net']))
+        setup_directories(plugin, self.options.python_version)
+        os.makedirs(os.path.join(plugin.installdir, 'usr', 'bin'))
+        open(os.path.join(plugin.installdir, 'usr', 'bin',
+                          self.options.python_version), 'w').close()
+        self.assertRaises(snapcraft.internal.errors.UnvendoredHostError,
+                          plugin.pull)
+
+
 class BasePythonPluginTestCase(unit.TestCase):
 
     def setUp(self):

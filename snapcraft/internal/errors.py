@@ -48,6 +48,18 @@ class MissingStateCleanError(SnapcraftError):
         super().__init__(step=step)
 
 
+class UnvendoredHostError(SnapcraftError):
+
+    fmt = (
+        'Failed to pull: '
+        '{source!r} is not permitted by vendoring. '
+        'Add {host!r} or copy the source to a permitted host.'
+    )
+
+    def __init__(self, *, source, host):
+        super().__init__(source=source, host=host)
+
+
 class StepOutdatedError(SnapcraftError):
 
     fmt = (

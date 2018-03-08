@@ -25,6 +25,7 @@ from glob import glob, iglob
 from typing import Dict, Set  # noqa
 
 import yaml
+import urllib.parse
 
 import snapcraft.extractors
 from snapcraft import file_utils
@@ -123,6 +124,13 @@ class PluginHandler:
         # the default '.'
         source_handler = None
         if self._source:
+            allowed_hosts = self._project_options.info.vendoring
+            if allowed_hosts:
+                source_host = urllib.parse.urlparse(self._source).netloc
+                if source_host and source_host not in allowed_hosts:
+                    raise errors.UnvendoredHostError(
+                        source=self._source, host=source_host)
+
             handler_class = sources.get_source_handler(
                 self._source, source_type=properties['source-type'])
             source_handler = handler_class(

@@ -71,6 +71,7 @@ class ProjectInfoTestCase(YamlBaseTestCase):
         info = snapcraft.ProjectInfo({
             'name': 'foo', 'version': '1',
             'summary': 'bar', 'description': 'baz',
+            'vendoring': ['example.com'],
             'confinement': 'strict'
             })
         self.assertThat(info.name, Equals('foo'))
@@ -78,6 +79,7 @@ class ProjectInfoTestCase(YamlBaseTestCase):
         self.assertThat(info.summary, Equals('bar'))
         self.assertThat(info.description, Equals('baz'))
         self.assertThat(info.confinement, Equals('strict'))
+        self.assertThat(info.vendoring, Equals(['example.com']))
 
 
 class ProjectTestCase(YamlBaseTestCase):
@@ -102,6 +104,7 @@ version: "1"
 summary: bar
 description: baz
 confinement: strict
+vendoring: [example.com]
 
 parts:
   part1:
@@ -117,6 +120,8 @@ parts:
                         Equals(project.info.description))
         self.assertThat(c.data['confinement'],
                         Equals(project.info.confinement))
+        self.assertThat(c.data['vendoring'],
+                        Equals(project.info.vendoring))
 
         # API of both Project and ProjectOptions must be available
         self.assertTrue(isinstance(project, snapcraft.Project))
@@ -179,10 +184,44 @@ parts:
         info = snapcraft.ProjectInfo({
             'name': 'foo', 'version': '1',
             'summary': 'bar', 'description': 'baz',
+            'vendoring': ['example.com'],
             'confinement': 'strict'
             })
         project.info = info
         self.assertThat(project.info, Equals(info))
+
+    def test_source_vendored_allowed(self):
+        self.make_snapcraft_yaml("""name: foo
+version: "1"
+summary: bar
+description: baz
+confinement: strict
+vendoring: [example.com]
+
+parts:
+  part1:
+    plugin: go
+    source: http://example.com/foo.tar.gz
+""")
+
+        _config.Config()
+
+    def test_source_vendored_invalid(self):
+        self.make_snapcraft_yaml("""name: foo
+version: "1"
+summary: bar
+description: baz
+confinement: strict
+vendoring: [test.net]
+
+parts:
+  part1:
+    plugin: go
+    source: http://example.com/foo.tar.gz
+""")
+
+        self.assertRaises(snapcraft.internal.errors.UnvendoredHostError,
+                          _config.Config)
 
 
 class YamlTestCase(YamlBaseTestCase):

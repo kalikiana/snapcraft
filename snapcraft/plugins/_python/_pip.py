@@ -19,15 +19,18 @@ import contextlib
 import json
 import logging
 import os
+import requests
 import shutil
 import stat
 import subprocess
 import sys
 import tempfile
 from typing import List, Set
+import urllib.parse
 
 import snapcraft
 from snapcraft import file_utils
+from snapcraft.common import isurl
 from snapcraft.internal import mangling
 from ._python_finder import (
     get_python_command,
@@ -104,6 +107,7 @@ class Pip:
     """
 
     def __init__(self, *, python_major_version, part_dir, install_dir,
+                 project,
                  stage_dir):
         """Initialize pip.
 
@@ -114,6 +118,7 @@ class Pip:
         :param str part_dir: Path to the part's working area
         :param str install_dir: Path to the part's install area
         :param str stage_dir: Path to the staging area
+        :param ProjectOptions project: A ProjectOptions instance
 
         :raises MissingPythonCommandError: If no python could be found in the
                                            staging or part's install area.
@@ -122,6 +127,7 @@ class Pip:
         self._part_dir = part_dir
         self._install_dir = install_dir
         self._stage_dir = stage_dir
+        self._project = project
 
         self._python_package_dir = os.path.join(
             self._part_dir, 'python-packages')
@@ -144,6 +150,49 @@ class Pip:
         self._ensure_pip_installed()
         self._ensure_wheel_installed()
         self._ensure_setuptools_installed()
+
+    def vendor(self, packages, requirements):
+        """Check that specified packages comply with vendoring if requested
+
+        Packages listed in python-packages or a requirements file can be local
+        or URLs. In the latter case we need to verify where they come from.
+        Requirements can also be a URL which means we check that also.
+        We don't check setup.py here because it would require executing code.
+        """
+
+        allowed_hosts = self._project.info.vendoring
+        if not allowed_hosts:
+            return
+
+        if requirements:
+            for requirement in requirements:
+                requirement_host = urllib.parse.urlparse(requirement).netloc
+                if requirement_host and requirement_host not in allowed_hosts:
+                    raise snapcraft.internal.errors.UnvendoredHostError(
+                        source=requirement, host=requirement_host)
+
+        packages = packages + self._packages_from_requirements(requirements)
+        for package in packages:
+            package_host = urllib.parse.urlparse(package).netloc
+            if package_host and package_host not in allowed_hosts:
+                raise snapcraft.internal.errors.UnvendoredHostError(
+                    source=package, host=package_host)
+
+    def _get_file_lines(self, path):
+        if isurl(path):
+            return requests.get(path).text.split()
+        with open(path) as _file:
+            return _file.read().split()
+
+    def _packages_from_requirements(self, requirements):
+        """Return a list of package names from a requirements file."""
+        packages = []
+        if requirements:
+            for requirement in requirements:
+                for line in self._get_file_lines(requirement):
+                    package = line.strip().split()[-1]
+                    packages.append(package)
+        return packages
 
     def is_setup(self):
         """Return true if this class has already been setup."""
@@ -234,6 +283,11 @@ class Pip:
 
         if not args:
             return  # No operation was requested
+
+        # No packages must be pulled from PyPI if we're vendorized
+        allowed_hosts = self._project.info.vendoring
+        if allowed_hosts:
+            args += ['--no-index', '--find-links', self._python_package_dir]
 
         # Using pip with a few special parameters:
         #

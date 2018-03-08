@@ -290,6 +290,10 @@ class ProjectInfo:
         self.summary = data.get('summary')
         self.description = data.get('description')
         self.confinement = data['confinement']
+        self.vendoring = data.get('vendoring', [])
+        if self.vendoring:
+            logger.info('Vendoring snap to {}'.format(
+                ', '.join(self.vendoring)))
 
 
 class Project(ProjectOptions):

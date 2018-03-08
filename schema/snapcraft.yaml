@@ -66,6 +66,16 @@ definitions:
 title: snapcraft schema
 type: object
 properties:
+  vendoring:
+    type: array
+    description: external sources available to resolve dependencies
+    minItems: 1
+    uniqueItems: true
+    items:
+      - type: string
+        validation-failure:
+          "{.instance!r} is not a valid hostname."
+        pattern: "[a-zA-Z0-9-.]+"
   build-packages:
     $ref: "#/definitions/grammar-array"
     description: top level build packages.

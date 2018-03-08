@@ -171,6 +171,7 @@ class PythonPlugin(snapcraft.BasePlugin):
     def _pip(self):
         if not self.__pip:
             self.__pip = _python.Pip(
+                project=self.project,
                 python_major_version=self._python_major_version,
                 part_dir=self.partdir,
                 install_dir=self.installdir,
@@ -195,6 +196,10 @@ class PythonPlugin(snapcraft.BasePlugin):
 
     def pull(self):
         super().pull()
+
+        # Check state of vendoring early to allow for nice error handling
+        requirements = self._get_requirements()
+        self._pip.vendor(self.options.python_packages, requirements)
 
         self._pip.setup()
 
