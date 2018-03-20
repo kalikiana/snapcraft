@@ -357,7 +357,7 @@ class Containerbuild:
         with open(filepath, 'wb') as f:
             for assertion in assertions:
                 logger.info('Looking up assertion {}'.format(assertion))
-                f.write(subprocess.check_output(['snap', 'known', *assertion]))
+                f.write(subprocess.check_output(['snap', 'known'] + assertion))
                 f.write(b'\n')
         container_filename = os.path.join(os.path.sep, 'run', filename)
         self._push_file(filepath, container_filename)

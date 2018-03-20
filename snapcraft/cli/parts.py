@@ -33,7 +33,7 @@ def update(ctx, **kwargs):
     # Update in the container so that it will use the parts at build time
     container_config = env.get_container_config()
     if container_config.use_container:
-        project_options = get_project_options(**kwargs)
+        project_options = get_project_options(kwargs)
         lifecycle.containerbuild('update', project_options, container_config)
 
     # Parts can be defined and searched from any folder on the host, so

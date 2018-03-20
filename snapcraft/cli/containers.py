@@ -50,7 +50,8 @@ def refresh(debug, **kwargs):
             "You can do that with the following command:\n\n"
             "snapcraft update")
 
-    project_options = get_project_options(**kwargs, debug=debug)
+    kwargs.update({'debug': debug})
+    project_options = get_project_options(kwargs)
     config = project_loader.load_config(project_options)
     lxd.Project(project_options=project_options,
                 remote=container_config.remote,

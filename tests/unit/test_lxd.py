@@ -442,6 +442,9 @@ class ContainerbuildTestCase(LXDTestCase):
             call(['snap', 'install', '/run/snapcraft_x1.snap',
                   '--dangerous', '--classic']),
         ])
+        self.fake_lxd.check_output_mock.assert_has_calls([
+            call(['snap', 'known', 'snap-declaration', 'snap-name=core']),
+        ])
 
     @patch('snapcraft.internal.lxd.Containerbuild._container_run')
     @patch('snapcraft.internal.common.is_snap')

@@ -27,11 +27,11 @@ from typing import Dict, FrozenSet, List, Set, Sequence, Tuple, Union  # noqa
 import elftools.elf.elffile
 from pkg_resources import parse_version
 
+import snapcraft
 from snapcraft.internal import (
     common,
     errors,
     os_release,
-    repo,
 )
 
 
@@ -597,8 +597,9 @@ def _get_system_libs() -> FrozenSet[str]:
 
     if not lib_path or not os.path.exists(lib_path):
         logger.debug('Only excluding libc libraries from the release')
-        libc6_libs = [os.path.basename(l)
-                      for l in repo.Repo.get_package_libraries('libc6')]
+        libc6_libs = [
+            os.path.basename(l)
+            for l in snapcraft.repo.Repo.get_package_libraries('libc6')]
         _libraries = frozenset(libc6_libs)
     else:
         with open(lib_path) as fn:
@@ -677,7 +678,7 @@ def find_linker(*, root_path: str, snap_base_path: str) -> str:
     """
     # We assume the current system will satisfy the GLIBC requirement,
     # get the current libc6 libraries (which includes the linker)
-    libc6_libraries_list = repo.Repo.get_package_libraries('libc6')
+    libc6_libraries_list = snapcraft.repo.Repo.get_package_libraries('libc6')
 
     # For security reasons, we do not want to automatically pull in
     # libraries but expect them to be consciously brought in by stage-packages

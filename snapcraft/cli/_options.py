@@ -45,24 +45,24 @@ def add_build_options(hidden=False):
     def _add_build_options(func):
         for name, params in zip(reversed(_BUILD_OPTION_NAMES),
                                 reversed(_BUILD_OPTIONS)):
-            option = click.option(name, **params,
+            option = click.option(name, help=params['help'],
+                                  is_flag=params.get('is_flag', False),
+                                  metavar=params.get('metavar'),
                                   cls=HiddenOption if hidden else click.Option)
             func = option(func)
         return func
     return _add_build_options
 
 
-def get_project_options(**kwargs):
+def get_project_options(kwargs):
     ctx = click.get_current_context()
     for key, value in ctx.parent.params.items():
         if not kwargs.get(key):
             kwargs[key] = value
 
-    project_args = dict(
+    return ProjectOptions(
         debug=kwargs.pop('debug'),
         use_geoip=kwargs.pop('enable_geoip'),
         parallel_builds=not kwargs.pop('no_parallel_builds'),
-        target_deb_arch=kwargs.pop('target_arch'),
+        target_deb_arch=kwargs.pop('target_arch')
     )
-
-    return ProjectOptions(**project_args)

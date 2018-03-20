@@ -33,7 +33,7 @@ from xml.etree import ElementTree
 
 import snapcraft
 from snapcraft import file_utils
-from snapcraft.internal import cache, repo, common, os_release, sources
+from snapcraft.internal import cache, common, os_release, sources
 from snapcraft.internal.indicators import is_dumb_terminal
 from ._base import BaseRepo
 from . import errors
@@ -248,7 +248,7 @@ class Ubuntu(BaseRepo):
                 name = apt_cache.get_providing_packages(name)[0].name
             logger.debug('Marking {!r} (and its dependencies) to be '
                          'fetched'.format(name))
-            name_arch, version = repo.get_pkg_name_parts(name)
+            name_arch, version = snapcraft.repo.get_pkg_name_parts(name)
             try:
                 if version:
                     _set_pkg_version(apt_cache[name_arch], version)

@@ -28,7 +28,7 @@ from snapcraft.internal.errors import (
         ContainerRunError,
         SnapcraftEnvironmentError,
 )
-from snapcraft.internal import lifecycle
+import snapcraft.internal.lifecycle
 from snapcraft.cli import echo
 
 logger = logging.getLogger(__name__)
@@ -210,4 +210,4 @@ class Project(Containerbuild):
             echo.warning('DEPRECATED: Use `prime` instead of `strip` '
                          'as the step to clean')
             step = 'prime'
-        lifecycle.clean(self._project_options, parts, step)
+        snapcraft.internal.lifecycle.clean(self._project_options, parts, step)

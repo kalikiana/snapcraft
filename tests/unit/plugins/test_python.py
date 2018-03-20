@@ -389,8 +389,9 @@ class PythonPluginWithURLTestCase(
 
     def setUp(self):
         super().setUp()
+        host, port = self.server.server_address
         self.source = 'http://{}:{}/{}'.format(
-            *self.server.server_address, 'testfile.txt')
+            host, port, 'testfile.txt')
 
     def test_get_manifest_with_requirements_url(self):
         self.options.requirements = self.source

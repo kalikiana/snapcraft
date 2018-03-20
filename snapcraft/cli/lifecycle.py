@@ -24,7 +24,7 @@ from . import env
 
 
 def _execute(command, parts, **kwargs):
-    project_options = get_project_options(**kwargs)
+    project_options = get_project_options(kwargs)
     container_config = env.get_container_config()
     if container_config.use_container:
         lifecycle.containerbuild(command, project_options,
@@ -129,7 +129,7 @@ def snap(directory, output, **kwargs):
     if directory:
         deprecations.handle_deprecation_notice('dn6')
 
-    project_options = get_project_options(**kwargs)
+    project_options = get_project_options(kwargs)
     container_config = env.get_container_config()
     if container_config.use_container:
         lifecycle.containerbuild('snap', project_options,
@@ -214,7 +214,8 @@ def cleanbuild(remote, debug, **kwargs):
     If using a remote, a prior setup is required which is described on:
     https://linuxcontainers.org/lxd/getting-started-cli/#multiple-hosts
     """
-    project_options = get_project_options(**kwargs, debug=debug)
+    kwargs.update({'debug': debug})
+    project_options = get_project_options(kwargs)
     lifecycle.cleanbuild(project_options, remote)
 
 
