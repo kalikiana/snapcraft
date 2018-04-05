@@ -20,7 +20,14 @@ from testtools.matchers import Equals
 
 from snapcraft.internal import errors
 from snapcraft.internal.meta import _errors as meta_errors
+from snapcraft.storeapi import errors as store_errors
 from tests import unit
+
+
+class FakeResponse:
+    def __init__(self, *, status_code: int, json: dict) -> None:
+        self.status_code = status_code
+        self.json = lambda: json
 
 
 class ErrorFormattingTestCase(unit.TestCase):
@@ -304,6 +311,15 @@ class ErrorFormattingTestCase(unit.TestCase):
                 'Failed to parse container image info: '
                 'SNAPCRAFT_IMAGE_INFO is not a valid JSON string: '
                 'test-image-info')}),
+        # store errors
+        ('StoreReleaseError', {
+            'exception': store_errors.StoreReleaseError,
+            'kwargs': {'snap_name': 'test',
+                       'response': FakeResponse(
+                           status_code=400, json={'errors': {'bla'}})},
+            'expected_message': (
+                "FIXME"
+                )}),
         # meta errors.
         ('AdoptedPartMissingError', {
             'exception': meta_errors.AdoptedPartMissingError,

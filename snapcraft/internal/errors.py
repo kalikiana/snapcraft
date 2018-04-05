@@ -29,9 +29,12 @@ class SnapcraftError(Exception):
     def __init__(self, **kwargs) -> None:
         for key, value in kwargs.items():
             setattr(self, key, value)
+        # Do the formatting here rather than in __str__ because if anything
+        # goes wrong the exception would otherwise be swallowed by format.
+        self.__str = self.fmt.format([], **self.__dict__)
 
     def __str__(self):
-        return self.fmt.format([], **self.__dict__)
+        return self.__str
 
     def get_exit_code(self):
         """Exit code to use if this exception causes Snapcraft to exit."""

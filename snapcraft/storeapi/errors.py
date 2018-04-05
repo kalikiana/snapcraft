@@ -393,6 +393,7 @@ class StoreReleaseError(StoreError):
         response_json = self.__to_json(response)
 
         try:
+            # FIXME: escape
             fmt = '{errors}'.format(**response_json)
 
         except AttributeError:
